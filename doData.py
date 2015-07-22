@@ -67,6 +67,7 @@ def fixROIs(datfram):
 def metadatata(fishid, inddata, masterdata): ###need to split name a la name_day_session
     indnom = fishid[:-1]
     session= int(fishid[-1:])
+    '''
     if 0<session<5:
         day = 1
     if 4<session<9:
@@ -75,6 +76,7 @@ def metadatata(fishid, inddata, masterdata): ###need to split name a la name_day
         day = 1
     if 4<session<9:
         day = 2
+    '''
     masterdata.loc[str(len(masterdata))] = pd.Series({'fishID':indnom, 'session': session, 'timeL':inddata['inrgt'].sum(),
                                             'timeR':inddata['inlft'].sum(), 'timeM':inddata['inmid'].sum()})
 

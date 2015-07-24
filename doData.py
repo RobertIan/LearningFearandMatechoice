@@ -3,6 +3,7 @@ import cv2
 import os
 import numpy as np
 import pandas as pd
+
 import argparse
 
 ############
@@ -27,8 +28,26 @@ def drawbox(boxpoints):
     lilbx = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
     return lilbx, x1, x2, x3, x4
 
+def distanc(x, y):
+    val = np.sqrt(x**2 + y**2)
+    return val
 
-def getregions(xs1, xs2, xs3, xs4):
+def distanceformula(df):
+    #print row
+    #print row['x'], row['y']
+    #print row
+    #print row['x']
+    #print row['y']
+    df.fillna(value=0, inplace=True)
+    df['xdiff'] = df['frame'].diff()
+    df['ydiff'] = df['frame'].diff()
+    print df['ydiff']
+    df['distance'] = df.apply(lambda row: distanc(row['x'],row['y']))
+    print df
+    return df
+
+
+def getroidata(xs1, xs2, xs3, xs4):
     xlist = [xs1, xs2, xs3, xs4]
     xlist.sort()
     xmin = xlist[0]
@@ -44,7 +63,20 @@ def getregions(xs1, xs2, xs3, xs4):
     data['inlft'] = np.where(data['x'] < data['midstrt'], 1, None)
     data['inmid'] = np.where((data['midstrt'] < data['x']) & (data['x'] < data['midstp']), 1, None)
 
+
+    '''
+    data['distance'] = data.apply(distanceformula)
+    data['stepright'] = np.where(data['inrgt'], data['distance'], None)
+    data['stepleft'] = np.where(data['inlft'], data['distance'], None)
+    data['stepmid'] = np.where(data['inmid'], data['distance'], None)
+    '''
     return data
+
+
+def scotoregion(lilbx):
+    print lilbx
+    datfram = lilbx
+    return datfram
 
 
 def fixROIs(datfram):
@@ -60,26 +92,17 @@ def fixROIs(datfram):
     datfram['inrgt'] = np.where(datfram['x'] > datfram['midstp'], 1, None)
     datfram['inlft'] = np.where(datfram['x'] < datfram['midstrt'], 1, None)
     datfram['inmid'] = np.where((datfram['midstrt'] < datfram['x']) & (datfram['x'] < datfram['midstp']), 1, None)
-
     return datfram
 
 
-def metadatata(fishid, inddata, masterdata): ###need to split name a la name_day_session
-    indnom = fishid[:-1]
-    session= int(fishid[-1:])
-    '''
-    if 0<session<5:
-        day = 1
-    if 4<session<9:
-        day = 2
-    if 8<session<13:
-        day = 1
-    if 4<session<9:
-        day = 2
-    '''
-    masterdata.loc[str(len(masterdata))] = pd.Series({'fishID':indnom, 'session': session, 'timeL':inddata['inrgt'].sum(),
-                                            'timeR':inddata['inlft'].sum(), 'timeM':inddata['inmid'].sum()})
-
+def metadatata(fishid, inddata, masterdata):  ###need to split name a la name_day_session
+    indnom, day, session, = fishid.split("_")
+    masterdata.loc[str(len(masterdata))] = pd.Series({'fishID': indnom, 'session': session, 'day': day,
+                                                      'timeL': inddata['inrgt'].sum(), 'timeR': inddata['inlft'].sum(),
+                                                      'timeM': inddata['inmid'].sum(),
+                                                      'PtimeL': inddata['inlft'].sum()/(inddata['inlft'].sum()+inddata['inrgt'].sum()+inddata['inmid'].sum()),
+                                                      'PtimeR': inddata['inrgt'].sum()/(inddata['inlft'].sum()+inddata['inrgt'].sum()+inddata['inmid'].sum()),
+                                                      'PtimeM': inddata['inmid'].sum()/(inddata['inlft'].sum()+inddata['inrgt'].sum()+inddata['inmid'].sum())})
     return masterdata
 
 ############
@@ -87,12 +110,13 @@ def metadatata(fishid, inddata, masterdata): ###need to split name a la name_day
 if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
-    ap.add_argument("-v", "--inputVideo", help="path to the video")
-    ap.add_argument("-t", "--trackingData", help="tracking data .csv file")
-    ap.add_argument("-r", "--reloadData",
-                    help="previous output, with ROI measured and interpolation 				performed")
+    ap.add_argument("-v", "--inputVideo", help="path to the video, defaults to numerosity videos")
+    ap.add_argument("-t", "--trackingData", help="tracking data .csv file, defaults to numerosity data")
+    ap.add_argument("-r", "--reloadData", help="previous output, with ROI measured and interpolation performed")
     ap.add_argument("-m", "--masterData", help="master data sheet")
-    ap.add_argument("-s", "--scotoData", help="scototaxis tracking data")
+    ap.add_argument("-c", "--mateChoice", help="indicates matechoice tracking data", action='store_true')
+    ap.add_argument("-g", "--socioData", help="indicates sociality tracking data", action='store_true')
+    ap.add_argument("-s", "--scotoData", help="indicates scototaxis tracking data", action='store_true')
     ap.add_argument("-f", "--fixROIs", help="only used for initial data, fixed in later versions", action='store_true')
     args = vars(ap.parse_args())
 
@@ -124,19 +148,17 @@ if __name__ == "__main__":
         data = pd.read_csv(args["trackingData"], index_col=0)
 
         data.interpolate(method='linear', inplace=True)
-
+        #print data
 
     except:
         print 'missing files...'
         exit()
 
-
-
     if vid.isOpened():
         rval, frame = vid.read()
     else:
         rval = False
-
+####################
     while rval:
         k = cv2.waitKey(1)
 
@@ -149,19 +171,26 @@ if __name__ == "__main__":
         if len(boxes) > 3:
             lilbx, xs1, xs2, xs3, xs4 = drawbox(boxes)
             cv2.polylines(frame, np.int32([lilbx]), 1, (0, 0, 255, 0))
-            if k == 115: # 's' #Mac
-            #if k == 1048691:  # 's' #Linux
-                data = getregions(xs1, xs2, xs3, xs4)
+            if k == 115:  # 's' #Mac
+                # if k == 1048691:  # 's' #Linux
+                if args["scotoData"]:
+                    data = scotoregion(lilbx)
+                else:
+                    #bs = data.columns.values.tolist()
+                    print bs
+                    data = getroidata(xs1, xs2, xs3, xs4)
+                    #data = distanceformula(data)
+                data.fillna(value=0, inplace=True)
                 cv2.destroyWindow("tankview")
                 cv2.waitKey(1)
                 cv2.destroyAllWindows()
                 cv2.waitKey(1)
                 vid.release()
                 rval = False
-                data.to_csv(name+'.csv')
+                data.to_csv(name + '.csv')
                 break
-            elif k == 99: # 'c' #Mac
-            #elif k == 1048675:  # 'c' #Linux
+            elif k == 99:  # 'c' #Mac
+                # elif k == 1048675:  # 'c' #Linux
                 print 'clear'
                 del boxes[:]
             else:
@@ -186,13 +215,17 @@ if __name__ == "__main__":
         print put
         if str(put) == 'y':
             print 'making master data sheet...'
-            metadat = pd.DataFrame(columns={'day', 'session', 'fishID', 'activityT', 'activityL', 'activityR', 'activityM',
-                                        'timeL', 'timeR', 'timeM'})
+            metadat = pd.DataFrame(columns={'day', 'session', 'fishID', 'activityT', 'activityL', 'activityR',
+                                            'activityM', 'activityT', 'timeL', 'timeR', 'timeM', 'PtimeL', 'PtimeR', 'PtimeM'})
         if str(put) == 'n':
             print 'locate master data and place in this directory. use "-m" tag. Then resume.'
             print 'exiting'
             exit()
 
-    metadat = metadatata(tdatnom, data, metadat)
+    if args["scotoData"]:
+        print 'scoto'
+    else:
+        metadat = metadatata(tdatnom, data, metadat)
+
     metadat.to_csv('masterdata.csv')
     print metadat

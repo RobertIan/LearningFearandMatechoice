@@ -19,6 +19,15 @@ def on_mouse(event, x, y, flags, params):
         ebox = [x, y]
         boxes.append(ebox)
 
+def on_mouse2(event, x, y, flags, params):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        print 'Start Mouse Position: ' + str(x) + ', ' + str(y)
+        sbox = [x, y]
+        rois.append(sbox)
+    elif event == cv2.EVENT_LBUTTONUP:
+        print 'End Mouse Position: ' + str(x) + ', ' + str(y)
+        ebox = [x, y]
+        rois.append(ebox)
 
 def drawbox(boxpoints):
     (x1, y1) = boxpoints[-4]
@@ -72,7 +81,14 @@ def getroidata(xs1, xs2, xs3, xs4):
     '''
     return data
 
-
+def getthigmodata(datfram, lilbox, roibox):
+    print data['y']
+    [x1a, y1a], [x2a, y2a], [x3a, y3a], [x4a, y4a] = lilbox
+    [x1b, y1b], [x2b, y2b], [x3b, y3b], [x4b, y4b] = roibox
+    avgtop = int((y1b+y2b)/2)
+    avgbot = int((y3b+y4b)/2)
+    datfram['atedge'] = np.where((data['y'] < avgtop) | (data['y'] > avgbot), 1, None)
+    return datfram
 def scotoregion(lilbx):
     print lilbx
     datfram = lilbx
@@ -98,7 +114,7 @@ def fixROIs(datfram):
 def metadatata(fishid, inddata, masterdata):  ###need to split name a la name_day_session
     indnom, day, session, = fishid.split("_")
     masterdata.loc[str(len(masterdata))] = pd.Series({'fishID': indnom, 'session': session, 'day': day,
-                                                      'timeL': inddata['inrgt'].sum(), 'timeR': inddata['inlft'].sum(),
+                                                      'timeR': inddata['inrgt'].sum(), 'timeL': inddata['inlft'].sum(),
                                                       'timeM': inddata['inmid'].sum(),
                                                       'PtimeL': inddata['inlft'].sum()/(inddata['inlft'].sum()+inddata['inrgt'].sum()+inddata['inmid'].sum()),
                                                       'PtimeR': inddata['inrgt'].sum()/(inddata['inlft'].sum()+inddata['inrgt'].sum()+inddata['inmid'].sum()),
@@ -112,14 +128,14 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", "--inputVideo", help="path to the video, defaults to numerosity videos")
     ap.add_argument("-t", "--trackingData", help="tracking data .csv file, defaults to numerosity data")
-    ap.add_argument("-r", "--reloadData", help="previous output, with ROI measured and interpolation performed")
+    #ap.add_argument("-r", "--reloadData", help="previous output, with ROI measured and interpolation performed")
     ap.add_argument("-m", "--masterData", help="master data sheet")
     ap.add_argument("-c", "--mateChoice", help="indicates matechoice tracking data", action='store_true')
     ap.add_argument("-g", "--socioData", help="indicates sociality tracking data", action='store_true')
     ap.add_argument("-s", "--scotoData", help="indicates scototaxis tracking data", action='store_true')
     ap.add_argument("-f", "--fixROIs", help="only used for initial data, fixed in later versions", action='store_true')
     args = vars(ap.parse_args())
-
+    '''
     try:
         dname, ext = args["reloadData"].split(".")
         data2 = pd.read_csv(args["reloadData"])
@@ -130,11 +146,12 @@ if __name__ == "__main__":
             exit()
     except:
         pass
-
+    '''
     try:
         cap = args["inputVideo"]
         name, ext = args["inputVideo"].split(".")
         boxes = []
+        rois = []
         cv2.namedWindow("tankview", cv2.WINDOW_AUTOSIZE)
         vid = cv2.VideoCapture(cap)
         try:
@@ -145,7 +162,7 @@ if __name__ == "__main__":
 
         assert name == tdatnom, "the names of these files do not match: %r != %r" % (name, tdatnom)
 
-        data = pd.read_csv(args["trackingData"], index_col=0)
+        data = pd.read_csv(args["trackingData"])
 
         data.interpolate(method='linear', inplace=True)
         #print data
@@ -171,30 +188,39 @@ if __name__ == "__main__":
         if len(boxes) > 3:
             lilbx, xs1, xs2, xs3, xs4 = drawbox(boxes)
             cv2.polylines(frame, np.int32([lilbx]), 1, (0, 0, 255, 0))
-            if k == 115:  # 's' #Mac
-                # if k == 1048691:  # 's' #Linux
-                if args["scotoData"]:
-                    data = scotoregion(lilbx)
-                else:
-                    #bs = data.columns.values.tolist()
-                    print bs
-                    data = getroidata(xs1, xs2, xs3, xs4)
-                    #data = distanceformula(data)
-                data.fillna(value=0, inplace=True)
-                cv2.destroyWindow("tankview")
-                cv2.waitKey(1)
-                cv2.destroyAllWindows()
-                cv2.waitKey(1)
-                vid.release()
-                rval = False
-                data.to_csv(name + '.csv')
-                break
-            elif k == 99:  # 'c' #Mac
-                # elif k == 1048675:  # 'c' #Linux
-                print 'clear'
-                del boxes[:]
+            cv2.setMouseCallback('tankview', on_mouse2, None)
+            if len(rois) > 3:
+                lilbx2, xs12, xs22, xs32, xs42 = drawbox(rois)
+                cv2.polylines(frame, np.int32([lilbx2]), 1, (0, 255, 0, 0))
+                # if k == 115:  # 's' #Mac
+                if k == 1048691:  # 's' #Linux
+                    print data
+                    if args["scotoData"]:
+                        data = scotoregion(lilbx)
+                    else:
+                        #bs = data.columns.values.tolist()
+                        #print bs
+                        data = getroidata(xs1, xs2, xs3, xs4)
+                        data = getthigmodata(data, lilbx, lilbx2)
+                        #data = getactivitydata()
+                        #data = distanceformula(data)
+                    data.fillna(value=0, inplace=True)
+                    cv2.destroyWindow("tankview")
+                    cv2.waitKey(1)
+                    cv2.destroyAllWindows()
+                    cv2.waitKey(1)
+                    vid.release()
+                    rval = False
+                    data.to_csv(name + '.csv')
+                    break
+                elif k == 99:  # 'c' #Mac
+                    # elif k == 1048675:  # 'c' #Linux
+                    print 'clear'
+                    del boxes[:]
+                    del rois[:]
             else:
                 pass
+
         cv2.imshow("tankview", frame)
 
     cv2.destroyWindow("tankview")
@@ -209,7 +235,7 @@ if __name__ == "__main__":
         print 'searching directory'
     try:
         assert (os.path.exists('masterdata.csv'))
-        metadat = pd.read_csv('masterdata.csv', index_col=0)
+        metadat = pd.read_csv('masterdata.csv')
     except AssertionError:
         put = raw_input('No master file entered or found. Create new masterfile? [y/n]: ')
         print put

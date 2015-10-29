@@ -117,10 +117,9 @@ def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_
                                                       'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata))})
     return masterdata
 
-
-def masterdatato(fishid, masterdata):
+def masterdatato(fishid, inddata, masterdata):
     pass
-    species, SL, sex, indnom, day, session, stimulus, stimulus_side,  = fishid.split("_")
+    species, SL, sex, indnom, day, session, stimulus, presside  = fishid.split("_")
     masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom, 'session': session, 'day': day,
                                                       'timeRight': inddata['inrgt'].sum(),
                                                       'timeLeft': inddata['inlft'].sum(),
@@ -132,22 +131,29 @@ def masterdatato(fishid, masterdata):
                                                           'stepdistanceRight'].sum() + inddata[
                                                                            'stepdistanceMiddle'].sum(),
                                                       'propActivityRight': float(inddata['stepdistanceRight'].sum()) /
-                                                                           inddata['stepdistanceLeft'].sum() + inddata[
-                                                                               'stepdistanceRight'].sum() + inddata[
-                                                                               'stepdistanceMiddle'].sum(),
+                                                                           inddata['stepdistanceTotal'].sum(),
                                                       'propActivityLeft': float(inddata['stepdistanceLeft'].sum()) /
-                                                                          inddata['stepdistanceLeft'].sum() + inddata[
-                                                                              'stepdistanceRight'].sum() + inddata[
-                                                                              'stepdistanceMiddle'].sum(),
+                                                                          inddata['stepdistanceTotal'].sum(),
                                                       'propActivityMiddle': float(inddata['stepdistanceMiddle'].sum()) /
-                                                                            inddata['stepdistanceLeft'].sum() + inddata[
-                                                                                'stepdistanceRight'].sum() + inddata[
-                                                                                'stepdistanceMiddle'].sum(),
+                                                                            inddata['stepdistanceTotal'].sum(),
                                                       'timeEdge': inddata['atedge'].sum(),
                                                       'propTimeEdge': inddata['atedge'].sum() / float(len(inddata)),
                                                       'propTimeLeft': inddata['inlft'].sum() / float(len(inddata)),
                                                       'propTimeRight': inddata['inrgt'].sum() / float(len(inddata)),
-                                                      'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata))})
+                                                      'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata)),
+                                                      'species': species, 'standardLength': SL, 'sex': sex,
+                                                      'stimulus': stimulus, 'stimSide': presside,
+                                                      'timeStim': inddata['inrgt'].sum() if presside == 'R' else
+                                                      inddata['inlft'].sum(),
+                                                      'activityStim': inddata['stepdistanceRight'].sum() if
+                                                      presside == 'R' else inddata['stepdistanceLeft'].sum(),
+                                                      'propTimeStim': inddata['inrgt'].sum()/float(len(inddata)) if
+                                                      presside == 'R' else inddata['inlft'].sum()/float(len(inddata)),
+                                                      'propActivityStim': float(inddata['stepdistanceRight'].sum())/
+                                                                          inddata['stepdistanceTotal'].sum() if
+                                                      presside == 'R' else float(inddata['stepdistanceLeft'].sum()) /
+                                                                           inddata['stepdistanceTotal'].sum()})
+    return masterdata
 
 if __name__ == "__main__":
     ### setup arguments
@@ -250,8 +256,8 @@ if __name__ == "__main__":
             masterdataNumerosity = pd.DataFrame(columns={'day', 'session',
                                                          'fishID', 'fishName', 'species', 'sex', 'standardLength',
                                                          'survivalMetric',
-                                                         'trainingStim', 'stimSide',
-                                                         'timeStim', 'activity Stim', 'propTimeStim',
+                                                         'stimulus', 'stimSide',
+                                                         'timeStim', 'activityStim', 'propTimeStim',
                                                          'propActivityStim',
                                                          'activityTotal',
                                                          'activityLeft', 'activityRight', 'activityMiddle',

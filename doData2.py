@@ -221,7 +221,7 @@ if __name__ == "__main__":
         print 'searching directory'
     try:
         assert (os.path.exists('masterdataNumerosity.csv'))
-        masterdataNumerosity = pd.read_csv('masterdataNumersity.csv')
+        masterdataNumerosity = pd.read_csv('masterdataNumerosity.csv')
     except AssertionError:
         put = raw_input('No master file entered or found. Create new masterfile? [y/n]: ')
         print put
@@ -237,7 +237,7 @@ if __name__ == "__main__":
                                                          'activityLeft', 'activityRight', 'activityMiddle',
                                                          'propActivityLeft', 'propActivityRight', 'propActivityMiddle',
                                                          'timeLeft', 'timeRight', 'timeMiddle',
-                                                         'propTimeLeft', 'propTimeRight', 'proprTimeMiddle',
+                                                         'propTimeLeft', 'propTimeRight', 'propTimeMiddle',
                                                          'timeEdge', 'propTimeEdge', })
         if str(put) == 'n':
             print 'locate master data and place in this directory. use "-m" tag. Then resume.'

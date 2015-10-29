@@ -95,7 +95,7 @@ def fixROIs(datfram):
 
 def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_day_session
     indnom, day, session, = fishid.split("_")
-    masterdata.loc[str(len(masterdata))] = pd.Series({'fishID': indnom, 'session': session, 'day': day,
+    masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom, 'session': session, 'day': day,
                                                       'timeRight': inddata['inrgt'].sum(),
                                                       'timeLeft': inddata['inlft'].sum(),
                                                       'timeMiddle': inddata['inmid'].sum(),

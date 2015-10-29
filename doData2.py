@@ -81,9 +81,7 @@ def getroidata(xs1, xs2, xs3, xs4):
     '''
     return data
 
-def getthigmodata(datfram, lilbox, roibox):
-    print data['y']
-    [x1a, y1a], [x2a, y2a], [x3a, y3a], [x4a, y4a] = lilbox
+def getthigmodata(datfram, roibox):
     [x1b, y1b], [x2b, y2b], [x3b, y3b], [x4b, y4b] = roibox
     avgtop = int((y1b+y2b)/2)
     avgbot = int((y3b+y4b)/2)
@@ -111,7 +109,7 @@ def fixROIs(datfram):
     return datfram
 
 
-def metadatata(fishid, inddata, masterdata):  ###need to split name a la name_day_session
+def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_day_session
     indnom, day, session, = fishid.split("_")
     masterdata.loc[str(len(masterdata))] = pd.Series({'fishID': indnom, 'session': session, 'day': day,
                                                       'timeR': inddata['inrgt'].sum(), 'timeL': inddata['inlft'].sum(),
@@ -121,6 +119,10 @@ def metadatata(fishid, inddata, masterdata):  ###need to split name a la name_da
                                                       'PtimeM': inddata['inmid'].sum()/(inddata['inlft'].sum()+inddata['inrgt'].sum()+inddata['inmid'].sum())})
     return masterdata
 
+
+def masterdatastats(combined_masterdata):
+    pass
+
 ############
 
 if __name__ == "__main__":
@@ -128,25 +130,13 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", "--inputVideo", help="path to the video, defaults to numerosity videos")
     ap.add_argument("-t", "--trackingData", help="tracking data .csv file, defaults to numerosity data")
-    #ap.add_argument("-r", "--reloadData", help="previous output, with ROI measured and interpolation performed")
     ap.add_argument("-m", "--masterData", help="master data sheet")
     ap.add_argument("-c", "--mateChoice", help="indicates matechoice tracking data", action='store_true')
     ap.add_argument("-g", "--socioData", help="indicates sociality tracking data", action='store_true')
     ap.add_argument("-s", "--scotoData", help="indicates scototaxis tracking data", action='store_true')
     ap.add_argument("-f", "--fixROIs", help="only used for initial data, fixed in later versions", action='store_true')
     args = vars(ap.parse_args())
-    '''
-    try:
-        dname, ext = args["reloadData"].split(".")
-        data2 = pd.read_csv(args["reloadData"])
-        if args["fixROIs"]:
-            print "fixing Ian's silly mistake"
-            fixROIs(data2)
-            data2.to_csv('data_fixed/' + dname + '.csv')
-            exit()
-    except:
-        pass
-    '''
+
     try:
         cap = args["inputVideo"]
         name, ext = args["inputVideo"].split(".")
@@ -165,7 +155,6 @@ if __name__ == "__main__":
         data = pd.read_csv(args["trackingData"])
 
         data.interpolate(method='linear', inplace=True)
-        #print data
 
     except:
         print 'missing files...'
@@ -192,8 +181,8 @@ if __name__ == "__main__":
             if len(rois) > 3:
                 lilbx2, xs12, xs22, xs32, xs42 = drawbox(rois)
                 cv2.polylines(frame, np.int32([lilbx2]), 1, (0, 255, 0, 0))
-                # if k == 115:  # 's' #Mac
-                if k == 1048691:  # 's' #Linux
+                if k == 115:  # 's' #Mac
+                # if k == 1048691:  # 's' #Linux
                     print data
                     if args["scotoData"]:
                         data = scotoregion(lilbx)
@@ -201,7 +190,7 @@ if __name__ == "__main__":
                         #bs = data.columns.values.tolist()
                         #print bs
                         data = getroidata(xs1, xs2, xs3, xs4)
-                        data = getthigmodata(data, lilbx, lilbx2)
+                        data = getthigmodata(data, lilbx2)
                         #data = getactivitydata()
                         #data = distanceformula(data)
                     data.fillna(value=0, inplace=True)
@@ -211,10 +200,10 @@ if __name__ == "__main__":
                     cv2.waitKey(1)
                     vid.release()
                     rval = False
-                    data.to_csv(name + '.csv')
+                    data.to_csv(name + '_processed.csv')
                     break
                 elif k == 99:  # 'c' #Mac
-                    # elif k == 1048675:  # 'c' #Linux
+                # elif k == 1048675:  # 'c' #Linux
                     print 'clear'
                     del boxes[:]
                     del rois[:]
@@ -241,7 +230,7 @@ if __name__ == "__main__":
         print put
         if str(put) == 'y':
             print 'making master data sheet...'
-            metadat = pd.DataFrame(columns={'day', 'session', 'fishID', 'activityT', 'activityL', 'activityR',
+            masterdat = pd.DataFrame(columns={'day', 'session', 'fishID', 'activityT', 'activityL', 'activityR',
                                             'activityM', 'activityT', 'timeL', 'timeR', 'timeM', 'PtimeL', 'PtimeR', 'PtimeM'})
         if str(put) == 'n':
             print 'locate master data and place in this directory. use "-m" tag. Then resume.'
@@ -251,7 +240,8 @@ if __name__ == "__main__":
     if args["scotoData"]:
         print 'scoto'
     else:
-        metadat = metadatata(tdatnom, data, metadat)
+        pass
+    masterdat = masterdatata(tdatnom, data, metadat)
 
-    metadat.to_csv('masterdata.csv')
+    masterdat.to_csv('masterdata.csv')
     print metadat

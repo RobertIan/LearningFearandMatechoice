@@ -39,11 +39,12 @@ def drawbox(boxpoints):
 
 def activitylevel(inddata):
     pixdistance = np.sqrt((inddata['x'].diff()) ** 2 + (inddata['y'].diff()) ** 2)
-    data['stepdistanceRight'] = np.where(data['inrgt'], pixdistance, None)
-    data['stepdistanceLeft'] = np.where(data['inlft'], pixdistance, None)
-    data['stepdistanceMiddle'] = np.where(data['inmid'], pixdistance, None)
+    inddata['stepdistanceRight'] = np.where(inddata['inrgt'], pixdistance, None)
+    inddata['stepdistanceLeft'] = np.where(inddata['inlft'], pixdistance, None)
+    inddata['stepdistanceMiddle'] = np.where(inddata['inmid'], pixdistance, None)
+    inddata['stepdistanceTotal'] = pixdistance
+    inddata.fillna(value=0, inplace=True)
     return inddata
-
 
 def getroidata(xs1, xs2, xs3, xs4):
     xlist = [xs1, xs2, xs3, xs4]
@@ -102,6 +103,31 @@ def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_
                                                       'activityLeft': inddata['stepdistanceLeft'].sum(),
                                                       'activityRight': inddata['stepdistanceRight'].sum(),
                                                       'activityMiddle': inddata['stepdistanceMiddle'].sum(),
+                                                      'activityTotal': inddata['stepdistanceTotal'].sum(),
+                                                      'propActivityRight': float(inddata['stepdistanceRight'].sum()) /
+                                                                           inddata['stepdistanceTotal'].sum(),
+                                                      'propActivityLeft': float(inddata['stepdistanceLeft'].sum()) /
+                                                                          inddata['stepdistanceTotal'].sum(),
+                                                      'propActivityMiddle': float(inddata['stepdistanceMiddle'].sum()) /
+                                                                            inddata['stepdistanceTotal'].sum(),
+                                                      'timeEdge': inddata['atedge'].sum(),
+                                                      'propTimeEdge': inddata['atedge'].sum() / float(len(inddata)),
+                                                      'propTimeLeft': inddata['inlft'].sum() / float(len(inddata)),
+                                                      'propTimeRight': inddata['inrgt'].sum() / float(len(inddata)),
+                                                      'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata))})
+    return masterdata
+
+
+def masterdatato(fishid, masterdata):
+    pass
+    species, SL, sex, indnom, day, session, stimulus, stimulus_side,  = fishid.split("_")
+    masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom, 'session': session, 'day': day,
+                                                      'timeRight': inddata['inrgt'].sum(),
+                                                      'timeLeft': inddata['inlft'].sum(),
+                                                      'timeMiddle': inddata['inmid'].sum(),
+                                                      'activityLeft': inddata['stepdistanceLeft'].sum(),
+                                                      'activityRight': inddata['stepdistanceRight'].sum(),
+                                                      'activityMiddle': inddata['stepdistanceMiddle'].sum(),
                                                       'activityTotal': inddata['stepdistanceLeft'].sum() + inddata[
                                                           'stepdistanceRight'].sum() + inddata[
                                                                            'stepdistanceMiddle'].sum(),
@@ -122,12 +148,6 @@ def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_
                                                       'propTimeLeft': inddata['inlft'].sum() / float(len(inddata)),
                                                       'propTimeRight': inddata['inrgt'].sum() / float(len(inddata)),
                                                       'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata))})
-    return masterdata
-
-
-def masterdatastats(combined_masterdata):
-    pass
-
 
 if __name__ == "__main__":
     ### setup arguments
@@ -179,8 +199,8 @@ if __name__ == "__main__":
             if len(rois) > 3:
                 lilbx2, xs12, xs22, xs32, xs42 = drawbox(rois)
                 cv2.polylines(frame, np.int32([lilbx2]), 1, (0, 255, 0, 0))
-                # if k == 115:  # 's' #Mac
-                if k == 1048691:  # 's' #Linux
+                if k == 115:  # 's' #Mac
+                #if k == 1048691:  # 's' #Linux
                     data.fillna(value=0, inplace=True)
                     data = data[data['x'] != 0]
                     if args["scotoData"]:
@@ -200,8 +220,8 @@ if __name__ == "__main__":
                     rval = False
                     data.to_csv(name + '_processed.csv')
                     break
-                # elif k == 99:  # 'c' #Mac
-                elif k == 1048675:  # 'c' #Linux
+                elif k == 99:  # 'c' #Mac
+                # elif k == 1048675:  # 'c' #Linux
                     print 'clear'
                     del boxes[:]
                     del rois[:]

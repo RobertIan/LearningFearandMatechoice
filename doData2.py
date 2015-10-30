@@ -46,6 +46,7 @@ def activitylevel(inddata):
     inddata.fillna(value=0, inplace=True)
     return inddata
 
+
 def getroidata(xs1, xs2, xs3, xs4):
     xlist = [xs1, xs2, xs3, xs4]
     xlist.sort()
@@ -117,9 +118,10 @@ def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_
                                                       'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata))})
     return masterdata
 
+
 def masterdatato(fishid, inddata, masterdata):
     pass
-    species, SL, sex, indnom, day, session, stimulus, presside  = fishid.split("_")
+    species, SL, sex, indnom, day, session, stimulus, presside = fishid.split("_")
     masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom, 'session': session, 'day': day,
                                                       'timeRight': inddata['inrgt'].sum(),
                                                       'timeLeft': inddata['inlft'].sum(),
@@ -147,13 +149,14 @@ def masterdatato(fishid, inddata, masterdata):
                                                       inddata['inlft'].sum(),
                                                       'activityStim': inddata['stepdistanceRight'].sum() if
                                                       presside == 'R' else inddata['stepdistanceLeft'].sum(),
-                                                      'propTimeStim': inddata['inrgt'].sum()/float(len(inddata)) if
-                                                      presside == 'R' else inddata['inlft'].sum()/float(len(inddata)),
-                                                      'propActivityStim': float(inddata['stepdistanceRight'].sum())/
+                                                      'propTimeStim': inddata['inrgt'].sum() / float(len(inddata)) if
+                                                      presside == 'R' else inddata['inlft'].sum() / float(len(inddata)),
+                                                      'propActivityStim': float(inddata['stepdistanceRight'].sum()) /
                                                                           inddata['stepdistanceTotal'].sum() if
                                                       presside == 'R' else float(inddata['stepdistanceLeft'].sum()) /
                                                                            inddata['stepdistanceTotal'].sum()})
     return masterdata
+
 
 if __name__ == "__main__":
     ### setup arguments
@@ -206,7 +209,7 @@ if __name__ == "__main__":
                 lilbx2, xs12, xs22, xs32, xs42 = drawbox(rois)
                 cv2.polylines(frame, np.int32([lilbx2]), 1, (0, 255, 0, 0))
                 if k == 115:  # 's' #Mac
-                #if k == 1048691:  # 's' #Linux
+                    # if k == 1048691:  # 's' #Linux
                     data.fillna(value=0, inplace=True)
                     data = data[data['x'] != 0]
                     if args["scotoData"]:
@@ -227,7 +230,7 @@ if __name__ == "__main__":
                     data.to_csv(name + '_processed.csv')
                     break
                 elif k == 99:  # 'c' #Mac
-                # elif k == 1048675:  # 'c' #Linux
+                    # elif k == 1048675:  # 'c' #Linux
                     print 'clear'
                     del boxes[:]
                     del rois[:]
@@ -269,8 +272,13 @@ if __name__ == "__main__":
             print 'locate master data and place in this directory. use "-m" tag. Then resume.'
             print 'exiting'
             exit()
-    masterdataNumerosity = masterdatata(tdatnom, data, masterdataNumerosity)
-    masterdataNumerosity.to_csv('masterdataNumerosity.csv')
+    masterdataNumerosity = masterdatato(tdatnom, data, masterdataNumerosity)
+    masterdataNumerosity.to_csv('masterdataNumerosity.csv', index=False, columns=['day', 'session', 'fishID',
+                                'fishName', 'species', 'sex', 'standardLength', 'timeEdge', 'propTimeEdge',
+                                'stimulus', 'stimSide', 'propTimeStim', 'propActivityStim', 'timeStim', 'activityStim',
+                                'activityTotal', 'activityLeft', 'activityRight', 'activityMiddle', 'propActivityLeft',
+                                'propActivityRight', 'propActivityMiddle', 'timeLeft', 'timeRight', 'timeMiddle',
+                                'propTimeLeft', 'propTimeRight', 'propTimeMiddle', 'survivalMetric'])
     print masterdataNumerosity
 
     #### for scoto

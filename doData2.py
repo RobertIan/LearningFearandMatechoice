@@ -121,7 +121,7 @@ def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_
 
 def masterdatato(fishid, inddata, masterdata):
     pass
-    species, SL, sex, indnom, day, session, stimulus, presside = fishid.split("_")
+    species, round, SL, sex, indnom, day, session, stimulus, presside = fishid.split("_")
     masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom, 'session': session, 'day': day,
                                                       'timeRight': inddata['inrgt'].sum(),
                                                       'timeLeft': inddata['inlft'].sum(),
@@ -144,6 +144,7 @@ def masterdatato(fishid, inddata, masterdata):
                                                       'propTimeRight': inddata['inrgt'].sum() / float(len(inddata)),
                                                       'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata)),
                                                       'species': species, 'standardLength': SL, 'sex': sex,
+                                                      'ROUND': round,
                                                       'stimulus': stimulus, 'stimSide': presside,
                                                       'timeStim': inddata['inrgt'].sum() if presside == 'R' else
                                                       inddata['inlft'].sum(),
@@ -256,7 +257,7 @@ if __name__ == "__main__":
         print put
         if str(put) == 'y':
             print 'making master data sheet...'
-            masterdataNumerosity = pd.DataFrame(columns={'day', 'session',
+            masterdataNumerosity = pd.DataFrame(columns={'day', 'session', 'round',
                                                          'fishID', 'fishName', 'species', 'sex', 'standardLength',
                                                          'survivalMetric',
                                                          'stimulus', 'stimSide',
@@ -273,12 +274,22 @@ if __name__ == "__main__":
             print 'exiting'
             exit()
     masterdataNumerosity = masterdatato(tdatnom, data, masterdataNumerosity)
-    masterdataNumerosity.to_csv('masterdataNumerosity.csv', index=False, columns=['day', 'session', 'fishID',
-                                'fishName', 'species', 'sex', 'standardLength', 'timeEdge', 'propTimeEdge',
-                                'stimulus', 'stimSide', 'propTimeStim', 'propActivityStim', 'timeStim', 'activityStim',
-                                'activityTotal', 'activityLeft', 'activityRight', 'activityMiddle', 'propActivityLeft',
-                                'propActivityRight', 'propActivityMiddle', 'timeLeft', 'timeRight', 'timeMiddle',
-                                'propTimeLeft', 'propTimeRight', 'propTimeMiddle', 'survivalMetric'])
+    masterdataNumerosity.to_csv('masterdataNumerosity.csv', index=False, columns=['species', 'sex', 'round', 'day',
+                                                                                  'session',
+                                                                                  'standardLength', 'fishID',
+                                                                                  'fishName', 'timeEdge',
+                                                                                  'propTimeEdge',
+                                                                                  'propTimeStim', 'propActivityStim',
+                                                                                  'stimulus', 'stimSide', 'timeStim',
+                                                                                  'activityStim',
+                                                                                  'activityTotal', 'activityLeft',
+                                                                                  'activityRight', 'activityMiddle',
+                                                                                  'propActivityLeft',
+                                                                                  'propActivityRight',
+                                                                                  'propActivityMiddle', 'timeLeft',
+                                                                                  'timeRight', 'timeMiddle',
+                                                                                  'propTimeLeft', 'propTimeRight',
+                                                                                  'propTimeMiddle', 'survivalMetric'])
     print masterdataNumerosity
 
     #### for scoto

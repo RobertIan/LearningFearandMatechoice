@@ -24,15 +24,18 @@ trace2 = go.Box(y=tankRight.propTimeLeft,name='Right Tank Left Side')
 trace1 = go.Box(y=tankLeft.propTimeRight,name='Left Tank Right Side')
 trace0 = go.Box(y=tankLeft.propTimeLeft,name='Left Tank Left Side')
 datum = [trace0, trace1, trace2, trace3]
-sidebiasanovaF, sidebiasanovaP = stats.f_oneway(tankLeft.propTimeLeft, tankLeft.propTimeRight, tankRight.propTimeLeft, tankRight.propTimeRight)
-sidebiasLeftLeftvLeftRightT, sidebiasLeftLeftvLeftRightP = stats.ttest_rel(tankLeft.propTimeLeft,tankLeft.propTimeRight)
-sidebiasLeftLeftvRightRightT, sidebiasLeftLeftvRightRightP = stats.ttest_ind(tankLeft.propTimeLeft,tankRight.propTimeRight)
 
+sidebiasanovaF, sidebiasanovaP = stats.f_oneway(tankLeft.propTimeLeft, tankLeft.propTimeRight, tankRight.propTimeLeft, tankRight.propTimeRight)
+#stats.probplot(tankRight.propTimeEdge, dist="norm", plot=pylab)
+#stats.probplot(tankLeft.propTimeEdge, dist="norm", plot=pylab)
+#pylab.show()
+sidebiasLeftLeftvLeftRightU, sidebiasLeftLeftvLeftRightP = stats.mannwhitneyu(tankLeft.propTimeLeft,tankLeft.propTimeRight)
+sidebiasLeftLeftvRightRightU, sidebiasLeftLeftvRightRightP = stats.mannwhitneyu(tankLeft.propTimeLeft,tankRight.propTimeRight)
 fig1 = go.Figure(data=datum)
 plot_url = py.plot(fig1, filename='tank side bias')
 print 'sidebiasanovaF: ', sidebiasanovaF
 print 'sidebiasanovaP: ', sidebiasanovaP
-print 'sidebiasLeftLeftvLeftRightT', sidebiasLeftLeftvLeftRightT
+print 'sidebiasLeftLeftvLeftRightU', sidebiasLeftLeftvLeftRightU
 print 'sidebiasLeftLeftvLeftRightP', sidebiasLeftLeftvLeftRightP
 ###we see a bias in the left tank towards the right side/away from left side
 ### is this side bias correlated with thigmotaxis (our measure of stress)?
@@ -48,8 +51,8 @@ tr2 = go.Box(y=lefttank.propTimeEdge, name='lefttankstress')
 stressdata = [tr,tr2]
 stressfig = go.Figure(data=stressdata)
 stressplot = py.plot(stressfig, filename='stress by tank')
-stressbytankT, stressbytankP = stats.ttest_ind(righttank.propTimeEdge, lefttank.propTimeEdge)
-print 'stressbytankT',stressbytankT
+stressbytankU, stressbytankP = stats.mannwhitneyu(righttank.propTimeEdge, lefttank.propTimeEdge)
+print 'stressbytankU',stressbytankU
 print 'stressbytankP', stressbytankP
 ###stress levels are similar in both tanks
 hightrainers = data.loc[data.condition=='High',['propTimeEdge']]
@@ -59,8 +62,8 @@ tr2222 = go.Box(y=lowtrainers.propTimeEdge, name='lowtrainerstress')
 stressdatahighlow = [tr222,tr2222]
 stressfighl = go.Figure(data=stressdatahighlow)
 stressplothl = py.plot(stressfighl, filename='stress by trained condition')
-stressbytrainerT, stressbytrainerP = stats.ttest_ind(hightrainers.propTimeEdge, lowtrainers.propTimeEdge)
-print 'stressbytrainerT',stressbytrainerT
+stressbytrainerU, stressbytrainerP = stats.mannwhitnyeu(hightrainers.propTimeEdge, lowtrainers.propTimeEdge)
+print 'stressbytrainerT',stressbytrainerU
 print 'stressbytrainerP', stressbytrainerP
 ###stress levels are similar across training groups
 ##############################
@@ -68,43 +71,6 @@ print 'stressbytrainerP', stressbytrainerP
 #
 ##############################
 # performance by ratio on testing days
-'''
-# individual trials
-testing_days = data.loc[data["day"]>=5, ["fishName", "propTimeStim", "day", "ratio"]]
-
-testdays5 = testing_days.loc[testing_days['ratio']==0.5, ["fishName", "propTimeStim"]]
-testdays6 = testing_days.loc[testing_days['ratio']==0.67, ["fishName", "propTimeStim"]]
-testdays7 = testing_days.loc[testing_days['ratio']==0.75, ["fishName", "propTimeStim"]]
-
-x1 = testdays5.propTimeStim
-x2 = testdays7.propTimeStim
-
-trace5 = go.Scatter(y=testdays6.propTimeStim,x=x1,mode='markers',name='0.67v0.50',text=testdays6.index)
-trace6 = go.Scatter(y=testdays7.propTimeStim,x=x1,mode='markers',name='0.75v0.50',text=testdays7.index)
-trace7 = go.Scatter(y=testdays6.propTimeStim,x=x2,mode='markers',name='0.67v0.75',text=testdays6.index)
-
-datuma = [trace5, trace6, trace7]
-fig2 = go.Figure(data=datuma)
-plot_url1 = py.plot(fig2, filename='cross-ratio performance (inc. reinf.)')
-
-# averages
-testdays5avgs = testdays5.groupby('fishName').propTimeStim.mean()
-testdays6avgs = testdays6.groupby('fishName').propTimeStim.mean()
-testdays7avgs = testdays7.groupby('fishName').propTimeStim.mean()
-
-traceA = go.Scatter(y=testdays6avgs,x=testdays5avgs,mode='markers',name='0.67v0.50',text=testdays6avgs.index)
-traceB = go.Scatter(y=testdays7avgs,x=testdays5avgs,mode='markers',name='0.75v0.50',text=testdays7avgs.index)
-traceC = go.Scatter(y=testdays6avgs,x=testdays7avgs,mode='markers',name='0.67v0.75',text=testdays6avgs.index)
-
-datumavgs = [traceA, traceB, traceC]
-figavg = go.Figure(data=datumavgs)
-plot_url2 = py.plot(figavg, filename='cross-ratio performance averages ALL (inc. reinf.)')
-testdayavg6v7R, testdayavg6v7P = stats.pearsonr(testdays6avgs,testdays7avgs)
-print 'testdayavg6v7R',testdayavg6v7R
-print'testdayavg6v7P', testdayavg6v7P
-###we see no significant relationship with individual tests but on averaged scores
-### inividuals that perform well on the 0.67 ratio also perform well on 0.75
-'''
 ##excluding reinfocement
 testing_daysexc = data.loc[(data["day"]>=5)&(data["session"]<=3), ["fishName", "propTimeStim", "day", "session", "ratio"]]
 testdays5exc = testing_daysexc.loc[testing_daysexc["ratio"]==0.5, ["fishName", "propTimeStim"]]
@@ -131,7 +97,12 @@ plot_url4 = py.plot(figavgexc, filename='cross-ratio performance averages')
 testdayavg6v7excR, testdayavg6v7excP = stats.pearsonr(testdays6avgsexc,testdays7avgsexc)
 print 'testdayavg6v7excR',testdayavg6v7excR
 print'testdayavg6v7excP', testdayavg6v7excP
+###excluding reinforcement: we see no significant relationship with individual tests but on averaged scores
+### inividuals that perform well on the 0.67 ratio also perform well on 0.75
+
+
 ##ratio performance by trained condition (high/low)
+#overall
 testing_dayscond = data.loc[(data["day"]>=5)&(data["session"]<=3), ["fishName", "propTimeStim", "day", "session", "ratio", "condition"]]
 h_fish = testing_dayscond[testing_dayscond['condition']=='High'].propTimeStim
 l_fish = testing_dayscond[testing_dayscond['condition']=='Low'].propTimeStim
@@ -146,49 +117,57 @@ highlowplot = py.plot(highlowfig1, filename='performace high vs low')
 highlowperfU, highlowperfP = stats.mannwhitneyu(h_fish, l_fish)
 print 'highlowperfU', highlowperfU
 print 'highlowperfP', highlowperfP
+#not a significant difference across all ratios but a TREND towards fish trained to the high side doing better
 
-###excluding reinforcement: we see no significant relationship with individual tests but on averaged scores
-### inividuals that perform well on the 0.67 ratio also perform well on 0.75
+#0.5 ratio
+testing_dayscond5 = data.loc[(data["day"]>=5)&(data["session"]<=3)&(data["ratio"]==0.5), ["fishName", "propTimeStim", "day", "session", "ratio", "condition"]]
+h_fish5 = testing_dayscond5[testing_dayscond5['condition']=='High'].propTimeStim
+l_fish5 = testing_dayscond5[testing_dayscond5['condition']=='Low'].propTimeStim
+tracelow5 = go.Box(y=h_fish5,name='hightrainerTstim 0.5')
+tracehigh5 = go.Box(y=l_fish5, name='lowtrainersTstim 0.5')
+performancehighlow5 = [tracelow5, tracehigh5]
+highlowfig15 = go.Figure(data=performancehighlow5)
+highlowplot5 = py.plot(highlowfig15, filename='performace high vs low 0.5')
+#stats.probplot(h_fish5, dist="norm", plot=pylab)
+#stats.probplot(l_fish5, dist="norm", plot=pylab)
+#pylab.show()
+highlowperf5U, highlowperf5P = stats.mannwhitneyu(h_fish5, l_fish5)
+print 'highlowperf5U', highlowperf5U
+print 'highlowperf5P', highlowperf5P
+
+#0.67 ratio
+testing_dayscond6 = data.loc[(data["day"]>=5)&(data["session"]<=3)&(data["ratio"]==0.67), ["fishName", "propTimeStim", "day", "session", "ratio", "condition"]]
+h_fish6 = testing_dayscond6[testing_dayscond6['condition']=='High'].propTimeStim
+l_fish6 = testing_dayscond6[testing_dayscond6['condition']=='Low'].propTimeStim
+tracelow6 = go.Box(y=h_fish6,name='hightrainerTstim 0.67')
+tracehigh6 = go.Box(y=l_fish6, name='lowtrainersTstim 0.67')
+performancehighlow6 = [tracelow6, tracehigh6]
+highlowfig16 = go.Figure(data=performancehighlow6)
+highlowplot6 = py.plot(highlowfig16, filename='performace high vs low 0.67')
+#stats.probplot(h_fish6, dist="norm", plot=pylab)
+#stats.probplot(l_fish6, dist="norm", plot=pylab)
+#pylab.show()
+highlowperf6U, highlowperf6P = stats.mannwhitneyu(h_fish6, l_fish6)
+print 'highlowperf6U', highlowperf6U
+print 'highlowperf6P', highlowperf6P
+
+#0.75 ratio
+testing_dayscond7 = data.loc[(data["day"]>=5)&(data["session"]<=3)&(data["ratio"]==0.75), ["fishName", "propTimeStim", "day", "session", "ratio", "condition"]]
+h_fish7 = testing_dayscond7[testing_dayscond7['condition']=='High'].propTimeStim
+l_fish7 = testing_dayscond7[testing_dayscond7['condition']=='Low'].propTimeStim
+tracelow7 = go.Box(y=h_fish7,name='hightrainerTstim 0.75')
+tracehigh7 = go.Box(y=l_fish7, name='lowtrainersTstim 0.75')
+performancehighlow7 = [tracelow7, tracehigh7]
+highlowfig17 = go.Figure(data=performancehighlow7)
+highlowplot7 = py.plot(highlowfig17, filename='performace high vs low 0.75')
+#stats.probplot(h_fish6, dist="norm", plot=pylab)
+#stats.probplot(l_fish6, dist="norm", plot=pylab)
+#pylab.show()
+highlowperf7U, highlowperf7P = stats.mannwhitneyu(h_fish7, l_fish7)
+print 'highlowperf7U', highlowperf7U
+print 'highlowperf7P', highlowperf7P
 ################################
 #
 
 #
 ################################
-
-
-'''
-testing_days = data.loc[(data["day"]>=5)&(data["tank"]=='R'), ["fishName", "propTimeStim", "day", "ratio"]]
-
-testdays5 = testing_days.loc[testing_days['ratio']==0.5, ["fishName", "propTimeStim"]]
-testdays6 = testing_days.loc[testing_days['ratio']==0.67, ["fishName", "propTimeStim"]]
-testdays7 = testing_days.loc[testing_days['ratio']==0.75, ["fishName", "propTimeStim"]]
-
-x1 = testdays5.propTimeStim
-x2 = testdays7.propTimeStim
-
-trace5 = go.Scatter(y=testdays6.propTimeStim,x=x1,mode='markers',name='0.67v0.50')
-trace6 = go.Scatter(y=testdays7.propTimeStim,x=x1,mode='markers',name='0.75v0.50')
-trace7 = go.Scatter(y=testdays6.propTimeStim,x=x2,mode='markers',name='0.67v0.75')
-
-datuma = [trace5, trace6, trace7]
-fig2 = go.Figure(data=datuma)
-plot_url1 = py.plot(fig2, filename='individual testing days across ratios')
-
-# averages
-testdays5avgs = testdays5.groupby('fishName').propTimeStim.mean()
-testdays6avgs = testdays6.groupby('fishName').propTimeStim.mean()
-testdays7avgs = testdays7.groupby('fishName').propTimeStim.mean()
-
-traceA = go.Scatter(y=testdays6avgs,x=testdays5avgs,mode='markers',name='0.67v0.50')
-traceB = go.Scatter(y=testdays7avgs,x=testdays5avgs,mode='markers',name='0.75v0.50')
-traceC = go.Scatter(y=testdays6avgs,x=testdays7avgs,mode='markers',name='0.67v0.75')
-
-datumavgs = [traceA, traceB, traceC]
-figavg = go.Figure(data=datumavgs)
-plot_url2 = py.plot(figavg, filename='average performancea across ratios')
-testdayavg6v7R, testdayavg6v7P = stats.pearsonr(testdays6avgs,testdays7avgs)
-print 'testdayavg6v7R',testdayavg6v7R
-print'testdayavg6v7P', testdayavg6v7P
-# we see no significant relationship with individual tests but on averaged scores
-### inividuals that perform well on the 0.67 ratio also perform well on 0.75
-'''

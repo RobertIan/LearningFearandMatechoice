@@ -9,6 +9,7 @@ import plotly.graph_objs as go
 
 #import data
 data = pd.read_csv('masterdataNumerosity_sailfins.csv')
+#add high/low condition
 data['condition']=np.where(data['fishName'].str[:1]=='H','High','Low')
 #
 #
@@ -50,7 +51,6 @@ stresbytankU, stressbytankP = stats.ttest_ind(righttank.propTimeEdge, lefttank.p
 print 'stressbytankT',stressbytankT
 print 'stressbytankP', stressbytankP
 ###stress levels are similar in both tanks
-
 hightrainers = data.loc[data.condition=='High',['propTimeEdge']]
 lowtrainers = data.loc[data.condition=='Low',['propTimeEdge']]
 tr222 = go.Box(y=hightrainers.propTimeEdge,name='hightrainerstress')
@@ -104,39 +104,39 @@ print'testdayavg6v7P', testdayavg6v7P
 ###we see no significant relationship with individual tests but on averaged scores
 ### inividuals that perform well on the 0.67 ratio also perform well on 0.75
 '''
-#excluding reinfocement
+##excluding reinfocement
 testing_daysexc = data.loc[(data["day"]>=5)&(data["session"]<=3), ["fishName", "propTimeStim", "day", "session", "ratio"]]
-
-testdays5exc = testing_daysexc.loc[testing_daysexc["ratio"]==0.5, ["fishName", "propTimeStim", "condition"]]
-testdays6exc = testing_daysexc.loc[testing_daysexc["ratio"]==0.67, ["fishName", "propTimeStim", "condition"]]
-testdays7exc = testing_daysexc.loc[testing_daysexc["ratio"]==0.75, ["fishName", "propTimeStim", "condition"]]
-
+testdays5exc = testing_daysexc.loc[testing_daysexc["ratio"]==0.5, ["fishName", "propTimeStim"]]
+testdays6exc = testing_daysexc.loc[testing_daysexc["ratio"]==0.67, ["fishName", "propTimeStim"]]
+testdays7exc = testing_daysexc.loc[testing_daysexc["ratio"]==0.75, ["fishName", "propTimeStim"]]
 x1exc = testdays5exc.propTimeStim
 x2exc = testdays7exc.propTimeStim
-
 trace5exc = go.Scatter(y=testdays6exc.propTimeStim,x=x1exc,mode='markers',name='0.67v0.50',text=testdays6exc.index)
 trace6exc = go.Scatter(y=testdays7exc.propTimeStim,x=x1exc,mode='markers',name='0.75v0.50',text=testdays7exc.index)
 trace7exc = go.Scatter(y=testdays6exc.propTimeStim,x=x2exc,mode='markers',name='0.67v0.75',text=testdays6exc.index)
-
 datumaexc = [trace5exc, trace6exc, trace7exc]
 fig2exc = go.Figure(data=datumaexc)
 plot_url3 = py.plot(fig2exc, filename='cross-ratio performance')
-
-#exclusding reinforcenment averages
+##exclusding reinforcenment averages
 testdays5avgsexc = testdays5exc.groupby('fishName').propTimeStim.mean()
 testdays6avgsexc = testdays6exc.groupby('fishName').propTimeStim.mean()
 testdays7avgsexc = testdays7exc.groupby('fishName').propTimeStim.mean()
-
 traceAexc = go.Scatter(y=testdays6avgsexc,x=testdays5avgsexc,mode='markers',name='0.67v0.50',text=testdays6avgsexc.index)
 traceBexc = go.Scatter(y=testdays7avgsexc,x=testdays5avgsexc,mode='markers',name='0.75v0.50',text=testdays7avgsexc.index)
 traceCexc = go.Scatter(y=testdays6avgsexc,x=testdays7avgsexc,mode='markers',name='0.67v0.75',text=testdays6avgsexc.index)
-
 datumavgsexc = [traceAexc, traceBexc, traceCexc]
 figavgexc = go.Figure(data=datumavgsexc)
 plot_url4 = py.plot(figavgexc, filename='cross-ratio performance averages')
 testdayavg6v7excR, testdayavg6v7excP = stats.pearsonr(testdays6avgsexc,testdays7avgsexc)
 print 'testdayavg6v7excR',testdayavg6v7excR
 print'testdayavg6v7excP', testdayavg6v7excP
+##ratio performance by trained condition
+testing_dayscond = data.loc[(data["day"]>=5)&(data["session"]<=3), ["fishName", "propTimeStim", "day", "session", "ratio", "condition"]]
+testdays5cond = testing_daysexc.loc[testing_daysexc["ratio"]==0.5, ["fishName", "propTimeStim", "condition"]]
+testdays6cond = testing_daysexc.loc[testing_daysexc["ratio"]==0.67, ["fishName", "propTimeStim", "condition"]]
+testdays7cond = testing_daysexc.loc[testing_daysexc["ratio"]==0.75, ["fishName", "propTimeStim", "condition"]]
+
+
 ###excluding reinforcement: we see no significant relationship with individual tests but on averaged scores
 ### inividuals that perform well on the 0.67 ratio also perform well on 0.75
 ################################

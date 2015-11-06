@@ -121,7 +121,7 @@ def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_
 
 def masterdatato(fishid, inddata, masterdata):
     pass
-    species, round, SL, sex, indnom, day, session, stimulus, ratio, presside = fishid.split("_")
+    species, round, SL, sex, indnom, day, session, stimulus, presside = fishid.split("_")
     masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom, 'session': session, 'day': day,
                                                       'timeRight': inddata['inrgt'].sum(),
                                                       'timeLeft': inddata['inlft'].sum(),
@@ -144,7 +144,7 @@ def masterdatato(fishid, inddata, masterdata):
                                                       'propTimeRight': inddata['inrgt'].sum() / float(len(inddata)),
                                                       'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata)),
                                                       'species': species, 'standardLength': SL, 'sex': sex,
-                                                      'roundd': round, 'ratio': ratio,
+                                                      'ROUND': round,
                                                       'stimulus': stimulus, 'stimSide': presside,
                                                       'timeStim': inddata['inrgt'].sum() if presside == 'R' else
                                                       inddata['inlft'].sum(),
@@ -209,8 +209,8 @@ if __name__ == "__main__":
             if len(rois) > 3:
                 lilbx2, xs12, xs22, xs32, xs42 = drawbox(rois)
                 cv2.polylines(frame, np.int32([lilbx2]), 1, (0, 255, 0, 0))
-                if k == 115:  # 's' #Mac
-                    # if k == 1048691:  # 's' #Linux
+                # if k == 115:  # 's' #Mac
+                if k == 1048691:  # 's' #Linux
                     data.fillna(value=0, inplace=True)
                     data = data[data['x'] != 0]
                     if args["scotoData"]:
@@ -230,8 +230,8 @@ if __name__ == "__main__":
                     rval = False
                     data.to_csv(name + '_processed.csv')
                     break
-                elif k == 99:  # 'c' #Mac
-                    # elif k == 1048675:  # 'c' #Linux
+                # elif k == 99:  # 'c' #Mac
+                elif k == 1048675:  # 'c' #Linux
                     print 'clear'
                     del boxes[:]
                     del rois[:]
@@ -259,7 +259,7 @@ if __name__ == "__main__":
             print 'making master data sheet...'
             masterdataNumerosity = pd.DataFrame(columns={'day', 'session', 'round',
                                                          'fishID', 'fishName', 'species', 'sex', 'standardLength',
-                                                         'survivalMetric', 'ratio',
+                                                         'survivalMetric',
                                                          'stimulus', 'stimSide',
                                                          'timeStim', 'activityStim', 'propTimeStim',
                                                          'propActivityStim',
@@ -273,15 +273,14 @@ if __name__ == "__main__":
             print 'locate master data and place in this directory. use "-m" tag. Then resume.'
             print 'exiting'
             exit()
-    masterdataNumerosity = masterdatata(tdatnom, data, masterdataNumerosity)
+    masterdataNumerosity = masterdatato(tdatnom, data, masterdataNumerosity)
     masterdataNumerosity.to_csv('masterdataNumerosity.csv', index=False, columns=['species', 'sex', 'round', 'day',
                                                                                   'session',
                                                                                   'standardLength', 'fishID',
                                                                                   'fishName', 'timeEdge',
                                                                                   'propTimeEdge',
                                                                                   'propTimeStim', 'propActivityStim',
-                                                                                  'stimulus', 'stimSide', 'ratio',
-                                                                                  'timeStim',
+                                                                                  'stimulus', 'stimSide', 'timeStim',
                                                                                   'activityStim',
                                                                                   'activityTotal', 'activityLeft',
                                                                                   'activityRight', 'activityMiddle',

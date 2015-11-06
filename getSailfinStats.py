@@ -6,9 +6,10 @@ import sys
 import matplotlib.pyplot as plt
 import plotly.plotly as py
 import plotly.graph_objs as go
+import pylab
 
 #import data
-data = pd.read_csv('masterdataNumerosity_sailfins.csv')
+data = pd.read_csv('data/masterdataNumerosity_sailfins.csv')
 #add high/low condition
 data['condition']=np.where(data['fishName'].str[:1]=='H','High','Low')
 #
@@ -47,7 +48,7 @@ tr2 = go.Box(y=lefttank.propTimeEdge, name='lefttankstress')
 stressdata = [tr,tr2]
 stressfig = go.Figure(data=stressdata)
 stressplot = py.plot(stressfig, filename='stress by tank')
-stresbytankU, stressbytankP = stats.ttest_ind(righttank.propTimeEdge, lefttank.propTimeEdge)
+stressbytankT, stressbytankP = stats.ttest_ind(righttank.propTimeEdge, lefttank.propTimeEdge)
 print 'stressbytankT',stressbytankT
 print 'stressbytankP', stressbytankP
 ###stress levels are similar in both tanks
@@ -130,12 +131,21 @@ plot_url4 = py.plot(figavgexc, filename='cross-ratio performance averages')
 testdayavg6v7excR, testdayavg6v7excP = stats.pearsonr(testdays6avgsexc,testdays7avgsexc)
 print 'testdayavg6v7excR',testdayavg6v7excR
 print'testdayavg6v7excP', testdayavg6v7excP
-##ratio performance by trained condition
+##ratio performance by trained condition (high/low)
 testing_dayscond = data.loc[(data["day"]>=5)&(data["session"]<=3), ["fishName", "propTimeStim", "day", "session", "ratio", "condition"]]
-testdays5cond = testing_daysexc.loc[testing_daysexc["ratio"]==0.5, ["fishName", "propTimeStim", "condition"]]
-testdays6cond = testing_daysexc.loc[testing_daysexc["ratio"]==0.67, ["fishName", "propTimeStim", "condition"]]
-testdays7cond = testing_daysexc.loc[testing_daysexc["ratio"]==0.75, ["fishName", "propTimeStim", "condition"]]
-
+h_fish = testing_dayscond[testing_dayscond['condition']=='High'].propTimeStim
+l_fish = testing_dayscond[testing_dayscond['condition']=='Low'].propTimeStim
+tracelow = go.Box(y=h_fish,name='hightrainerTstim')
+tracehigh = go.Box(y=l_fish, name='lowtrainersTstim')
+performancehighlow = [tracelow, tracehigh]
+highlowfig1 = go.Figure(data=performancehighlow)
+highlowplot = py.plot(highlowfig1, filename='performace high vs low')
+#stats.probplot(h_fish, dist="norm", plot=pylab)
+#stats.probplot(l_fish, dist="norm", plot=pylab)
+#pylab.show()
+highlowperfU, highlowperfP = stats.mannwhitneyu(h_fish, l_fish)
+print 'highlowperfU', highlowperfU
+print 'highlowperfP', highlowperfP
 
 ###excluding reinforcement: we see no significant relationship with individual tests but on averaged scores
 ### inividuals that perform well on the 0.67 ratio also perform well on 0.75
@@ -144,10 +154,6 @@ testdays7cond = testing_daysexc.loc[testing_daysexc["ratio"]==0.75, ["fishName",
 
 #
 ################################
-
-
-
-
 
 
 '''
@@ -185,61 +191,4 @@ print 'testdayavg6v7R',testdayavg6v7R
 print'testdayavg6v7P', testdayavg6v7P
 # we see no significant relationship with individual tests but on averaged scores
 ### inividuals that perform well on the 0.67 ratio also perform well on 0.75
-
-
-'''
-
-
-
-
-
-
-
-'''
-
-#define subsets
-sexgroup = data.groupby('sex')
-speciesgroup = data.groupby('species')
-daygroup = data.groupby('day')
-
-learners = data[(data.day>4) & (data.propTimeStim>0.60)]
-nonlearners = data[(data.day>4) & (data.propTimeStim<0.60)]
-
-learnersbyday = learners.groupby('day')
-nonlearnersbyday = nonlearners.groupby('day')
-
-learnersbysex = learners.groupby('sex')
-nonlearnersbysex = nonlearners.groupby('sex')
-
-learnersbyspecies = learners.groupby('species')
-nonlearnersbyspecies = nonlearners.groupby('species')
-
-
-
-
-
-'''
-
-
-
-'''
-
-'species', 'sex', 'round', 'day',
-                                                                                  'session',
-                                                                                  'standardLength', 'fishID',
-                                                                                  'fishName', 'timeEdge',
-                                                                                  'propTimeEdge',
-                                                                                  'propTimeStim', 'propActivityStim',
-                                                                                  'stimulus', 'stimSide', 'timeStim',
-                                                                                  'activityStim',
-                                                                                  'activityTotal', 'activityLeft',
-                                                                                  'activityRight', 'activityMiddle',
-                                                                                  'propActivityLeft',
-                                                                                  'propActivityRight',
-                                                                                  'propActivityMiddle', 'timeLeft',
-                                                                                  'timeRight', 'timeMiddle',
-                                                                                  'propTimeLeft', 'propTimeRight',
-                                                                                  'propTimeMiddle', 'survivalMetric']
-
-
 '''

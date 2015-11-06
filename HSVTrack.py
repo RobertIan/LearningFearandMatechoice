@@ -3,36 +3,41 @@ import cv2, csv, os, re
 import numpy as np
 import argparse
 
-# # TO DO: # different mask
 
-# initialize some constants, lists, csv writer
-# construct the argument parse and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--inputVideo", help="path to the video")
-args = vars(ap.parse_args())
-lower = np.array([0, 0, 0])
-upper = np.array([255, 255, 25])
-counter = 0
 
-# set up the video capture to the video that was the argument to the script
-cap = cv2.VideoCapture(args["inputVideo"])
+def on_mouseblackbox(event, x, y, flags, params):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        #print 'Start Mouse Position: ' + str(x) + ', ' + str(y)
+        sbox = [x, y]
+        blackbox.append(sbox)
+    elif event == cv2.EVENT_LBUTTONUP:
+        #print 'End Mouse Position: ' + str(x) + ', ' + str(y)
+        ebox = [x, y]
+        blackbox.append(ebox)
 
-# output to csv file where the results will be written
-name = re.split('[/.]', args["inputVideo"], flags=re.IGNORECASE)[-2]
-name = name + ".csv"
-print(name)
-myfile = open(name, 'wb')
-csv_writer = csv.writer(myfile, quoting=csv.QUOTE_NONE)
-csv_writer.writerow(("x", "y", "frame"))
+def on_mousewhitebox(event, x, y, flags, params):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        #print 'Start Mouse Position: ' + str(x) + ', ' + str(y)
+        sbox = [x, y]
+        whitebox.append(sbox)
+    elif event == cv2.EVENT_LBUTTONUP:
+        #print 'End Mouse Position: ' + str(x) + ', ' + str(y)
+        ebox = [x, y]
+        whitebox.append(ebox)
 
-# declare some functions:
+def drawbox(boxpoints):
+    (x1, y1) = boxpoints[-4]
+    (x2, y2) = boxpoints[-3]
+    (x3, y3) = boxpoints[-2]
+    (x4, y4) = boxpoints[-1]
+    lilbx = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
+    return lilbx, x1, x2, x3, x4
 
-# converts a frame to HSV, blurs it, masks it to only get the tank by itself
 def convertToHSV(frame):
+    height, width, channels = frame.shape
     blurred = cv2.blur(frame, (2, 2))
-    print cap.get(6)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-    mask = np.zeros((720, 1280, 3), np.uint8)
+    mask = np.zeros((height, width, 3), np.uint8)
     mask[:, :] = hsv[:, :]
     return mask
 
@@ -103,55 +108,92 @@ def returnLargeContour(frame):
             csv_writer.writerow((centroid_x, centroid_y, counter))
             return ((centroid_x, centroid_y))
 
-
-# similar to the above function, but restricts possibile contours to the location of the last contour
-def returnCentroid(frame, lastPosition):
-    pass
+#def returnCentroid(frame, lastPosition):
+    #pass
 
 
-# grab the first frame
-ret, frame = cap.read()
-hsv_initial = convertToHSV(frame)
+if '__name__'=='__main__':
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-i", "--inputVideo", help="path to the video")
+    ap.add_argument("-s", "--scoto", help="for scototaxis videos", action="store_true")
+    args = vars(ap.parse_args())
+    lower = np.array([0, 0, 0])
+    upper = np.array([255, 255, 25])
+    counter = 0
+    cap = cv2.VideoCapture(args["inputVideo"])
+    name = re.split('[/.]', args["inputVideo"], flags=re.IGNORECASE)[-2]
+    name = name + ".csv"
+    #print(name)
+    myfile = open(name, 'wb')
+    csv_writer = csv.writer(myfile, quoting=csv.QUOTE_NONE)
+    csv_writer.writerow(("x", "y", "frame"))
+
+    ret, frame = cap.read()
+    hsv_initial = convertToHSV(frame)
+
+    while (cap.isOpened()):
 
 
-# the main loop
-while (cap.isOpened()):
+        if args["scoto"]:
+            blackbox =[]
+            whitebox=[]
+            blackbx, bx1, bx2, bx3, bx4 = drawbox(blackbox)
+            cv2.polylines(frame, np.int32([blackbx]), 2, (0, 0, 255, 0))
+            whitebx, bx1, bx2, bx3, bx4 = drawbox(whitebox)
+            cv2.polylines(frame, np.int32([whitebx]), 2, (255, 255, 0, 0))
 
-    print "frame " + str(counter)
+            if counter == 0:
+                findStartingPoint(cap, 100)
+                counter += 1
+                # re-start the video capture
+                cap = cv2.VideoCapture(args["inputVideo"])
 
-    if counter == 0:
-        findStartingPoint(cap, 100)
-        counter += 1
-        # re-start the video capture
-        cap = cv2.VideoCapture(args["inputVideo"])
+            else:
+                ret, frame = cap.read()
+                hsv = convertToHSV(frame)
+                difference = cv2.subtract(hsv_initial, hsv)
+                masked = cv2.inRange(difference, lower, upper)
+                maskedInvert = cv2.bitwise_not(masked)
 
-    else:
-        ret, frame = cap.read()
-        hsv = convertToHSV(frame)
-        difference = cv2.subtract(hsv_initial, hsv)
-        masked = cv2.inRange(difference, lower, upper)
-        maskedInvert = cv2.bitwise_not(masked)
+                center = returnLargeContour(maskedInvert)
 
-        # find the centroid of the largest blob
-        center = returnLargeContour(maskedInvert)
-        print "Center: " + str(center)
-        # draw the centroids on the image
-        if not not center:
-            cv2.circle(frame, center, 3, [0, 0, 255], -1)
+                if center:
+                    cv2.circle(frame, center, 3, [0, 0, 255], -1)
+                cv2.imshow('image', frame)
+                cv2.imshow('thresh', masked)
+                cv2.imshow('diff', difference)
+                k = cv2.waitKey(1)
+                if k == 27:
+                    break
+                # the idea here is to re-set the 'initial' image every 100 frames in case there are changes with the light or top of the water reflections
+                if counter == 100 or counter == 200 or counter == 300:
+                    hsv_initial = hsv
+                counter += 1
 
-
-        #cv2.imshow('image', frame)
-        #cv2.imshow('thresh', masked)
-        #cv2.imshow('diff', difference)
-
-        k = cv2.waitKey(1)
-        if k == 27:
-            break
-
-        # the idea here is to re-set the 'initial' image every 100 frames in case there are changes with the light or top of the water reflections
-        if counter == 100 or counter == 200 or counter == 300:
-            hsv_initial = hsv
-
-        counter += 1
-
-cv2.destroyAllWindows()
+        else:
+            if counter == 0:
+                findStartingPoint(cap, 100)
+                counter += 1
+                # re-start the video capture
+                cap = cv2.VideoCapture(args["inputVideo"])
+            else:
+                ret, frame = cap.read()
+                hsv = convertToHSV(frame)
+                difference = cv2.subtract(hsv_initial, hsv)
+                masked = cv2.inRange(difference, lower, upper)
+                maskedInvert = cv2.bitwise_not(masked)
+                # find the centroid of the largest blob
+                center = returnLargeContour(maskedInvert)
+                # draw the centroids on the image
+                if center:
+                    cv2.circle(frame, center, 3, [0, 0, 255], -1)
+                cv2.imshow('image', frame)
+                cv2.imshow('thresh', masked)
+                cv2.imshow('diff', difference)
+                k = cv2.waitKey(1)
+                if k == 27:
+                    break
+                if counter == 100 or counter == 200 or counter == 300:
+                    hsv_initial = hsv
+                counter += 1
+    cv2.destroyAllWindows()

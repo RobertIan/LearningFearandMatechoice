@@ -15,6 +15,11 @@ data['condition']=np.where(data['fishName'].str[:1]=='H','High','Low')
 #
 #
 #
+#
+#
+#
+
+#
 ##############################
 # side bias
 tankRight = data.loc[data.tank=='R', ['propTimeRight', 'propTimeLeft']]
@@ -43,6 +48,14 @@ print 'sidebiasLeftLeftvLeftRightP', sidebiasLeftLeftvLeftRightP
 #
 #
 #
+#
+#
+#
+#
+#
+#
+#
+#
 ##############################
 #stress levels (thigmotaxis)
 righttank = data.loc[data.tank=='R',['propTimeEdge']]
@@ -63,11 +76,19 @@ tr2222 = go.Box(y=lowtrainers.propTimeEdge, name='lowtrainerstress')
 stressdatahighlow = [tr222,tr2222]
 stressfighl = go.Figure(data=stressdatahighlow)
 stressplothl = py.plot(stressfighl, filename='stress by trained condition')
-stressbytrainerU, stressbytrainerP = stats.mannwhitnyeu(hightrainers.propTimeEdge, lowtrainers.propTimeEdge)
+stressbytrainerU, stressbytrainerP = stats.mannwhitneyu(hightrainers.propTimeEdge, lowtrainers.propTimeEdge)
 print 'stressbytrainerT',stressbytrainerU
 print 'stressbytrainerP', stressbytrainerP
 ###stress levels are similar across training groups
 ##############################
+#
+#
+#
+#
+#
+#
+#
+#
 #
 #
 #
@@ -171,7 +192,16 @@ print 'highlowperf7P', highlowperf7P
 #
 #
 #
+#
+#
+#
+#
+#
+#
+#
+#
 ################################
+#
 #by sex
 testingdaysfemales = data.loc[(data["day"]>=5)&(data["session"]<=3)&(data["sex"]=='F'), ["fishName", "propTimeStim", "day", "session", "ratio", "condition"]]
 testingdaysmales = data.loc[(data["day"]>=5)&(data["session"]<=3)&(data["sex"]=='M'), ["fishName", "propTimeStim", "day", "session", "ratio", "condition"]]
@@ -183,7 +213,7 @@ fmplot = py.plot(femalemale, filename='female and male performance')
 femalemaleU, femalemaleP = stats.mannwhitneyu(testingdaysfemales.propTimeStim,testingdaysmales.propTimeStim)
 print 'femalemaleU', femalemaleU
 print 'femalemaleP', femalemaleP
-
+#
 #sex by high low
 highfems = testingdaysfemales[testingdaysfemales["condition"]=='High'].propTimeStim
 lowfems = testingdaysfemales[testingdaysfemales["condition"]=='Low'].propTimeStim
@@ -196,5 +226,21 @@ tracehighmales = go.Box(y=highmales, name='highmales')
 performancehighlowfemalemale = [tracelowfems, tracehighfems, tracelowmales, tracehighmales]
 femalemalehighlowfig = go.Figure(data=performancehighlowfemalemale)
 fmhlplot = py.plot(femalemalehighlowfig, filename='female and male performance across training condition')
-
+#
 #sexbyratio
+fems5 = testingdaysfemales[testingdaysfemales["ratio"]==0.5].propTimeStim
+fems6 = testingdaysfemales[testingdaysfemales["ratio"]==0.67].propTimeStim
+males5 = testingdaysmales[testingdaysmales["ratio"]==0.5].propTimeStim
+males6 = testingdaysmales[testingdaysmales["ratio"]==0.67].propTimeStim
+fems7 = testingdaysfemales[testingdaysfemales["ratio"]==0.75].propTimeStim
+males7 = testingdaysmales[testingdaysmales["ratio"]==0.75].propTimeStim
+tracefems5 = go.Box(y=fems5,name='females 0.5')
+tracefems6 = go.Box(y=fems6,name='females 0.67')
+tracemales6 = go.Box(y=males6,name='males 0.67')
+tracemales5 = go.Box(y=males5,name='males 0.5')
+tracemales7 = go.Box(y=males7,name='males 0.75')
+tracefems7 = go.Box(y=fems7,name='females 0.75')
+femalemalebyratio = [tracefems5, tracemales5, tracefems6,  tracemales6,tracefems7,  tracemales7]
+fmbrfig = go.Figure(data=femalemalebyratio)
+fmbrplot = py.plot(fmbrfig, filename='female male performance across ratios')
+stats.mannwhitneyu(fems6, males6)

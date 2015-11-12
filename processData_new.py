@@ -94,7 +94,7 @@ def fixROIs(datfram):
     datfram['inmid'] = np.where((datfram['midstrt'] < datfram['x']) & (datfram['x'] < datfram['midstp']), 1, None)
     return datfram
 
-
+'''
 def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_day_session
     indnom, day, session, = fishid.split("_")
     masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom, 'session': session, 'day': day,
@@ -118,10 +118,10 @@ def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_
                                                       'propTimeRight': inddata['inrgt'].sum() / float(len(inddata)),
                                                       'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata))})
     return masterdata
-
+'''
 
 def masterdatato(fishid, inddata, masterdata):
-    #####
+
     if args['mateChoice']:
         indnom, maleside, unused = fishid.split("_")
         masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom,
@@ -152,7 +152,8 @@ def masterdatato(fishid, inddata, masterdata):
                                                           maleside == 'R' else inddata['inlft'].sum() / float(len(inddata)),
                                                       'propActivityStim': float(inddata['stepdistanceRight'].sum()) /
                                                                               inddata['stepdistanceTotal'].sum() if
-                                                          maleside == 'R' else float(inddata['stepdistanceLeft'].sum()) /
+                                                          maleside == 'R' else float(inddata['stepdistanceLeft'].sum())})
+
     if args['socioData']:
         indnom, groupside, sex = fishid.split("_")
         masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom,
@@ -183,12 +184,15 @@ def masterdatato(fishid, inddata, masterdata):
                                                           groupside == 'R' else inddata['inlft'].sum() / float(len(inddata)),
                                                       'propActivityStim': float(inddata['stepdistanceRight'].sum()) /
                                                                               inddata['stepdistanceTotal'].sum() if
-                                                          groupside == 'R' else float(inddata['stepdistanceLeft'].sum()) /
-                                                                               inddata['stepdistanceTotal'].sum()})                                                                               inddata['stepdistanceTotal'].sum()})
-        ####
+                                                          groupside == 'R' else float(inddata['stepdistanceLeft'].sum())})
+
+    if args['scotoData']:
+        pass
+
     else:
         species, round, SL, sex, indnom, day, session, stimulus, presside = fishid.split("_")
         masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom, 'session': session, 'day': day,
+                                                          'trialtype': 'numerosity',
                                                           'timeRight': inddata['inrgt'].sum(),
                                                           'timeLeft': inddata['inlft'].sum(),
                                                           'timeMiddle': inddata['inmid'].sum(),
@@ -309,7 +313,53 @@ if __name__ == "__main__":
     cv2.destroyAllWindows()
     cv2.waitKey(1)
 
-    ### Numerosity Data Sheet creation
+    ### Data Sheet creation
+ if args["socioData"]:
+        try:
+            metadataSocio = pd.read_csv(args["masterData"])
+        except IOError:
+            print 'the data master-list is missing?'
+            print 'searching directory'
+        try:
+            assert (os.path.exists('masterdataSocio.csv'))
+            masterdataSocio = pd.read_csv('masterdataSocio.csv')
+        except AssertionError:
+            put = raw_input('No master file entered or found. Create new masterfile? [y/n]: ')
+            print put
+            if str(put) == 'y':
+                print 'making master data sheet...'
+
+
+        ######
+                masterdataSocio = pd.DataFrame(columns={
+                                         'fishID', 'fishName', 'species', 'sex', 'stimSide', 'trialtype',
+                                         'timeStim', 'activityStim', 'propTimeStim',
+                                         'propActivityStim',
+                                         'activityTotal',
+                                         'activityLeft', 'activityRight', 'activityMiddle',
+                                         'propActivityLeft', 'propActivityRight', 'propActivityMiddle',
+                                         'timeLeft', 'timeRight', 'timeMiddle',
+                                         'propTimeLeft', 'propTimeRight', 'propTimeMiddle',
+                                         'timeEdge', 'propTimeEdge', })
+        masterdataSocio = masterdatato(tdatnom, data, masterdataSocio)
+        masterdataSocio.to_csv('masterdataChoice.csv', index=False, columns=['species', 'sex', 'round', 'day',
+                                                                              'trialtype',
+                                                                                  'session',
+                                                                                  'standardLength', 'fishID',
+                                                                                  'fishName', 'timeEdge',
+                                                                                  'propTimeEdge',
+                                                                                  'propTimeStim', 'propActivityStim',
+                                                                                  'stimulus', 'stimSide', 'timeStim',
+                                                                                  'activityStim',
+                                                                                  'activityTotal', 'activityLeft',
+                                                                                  'activityRight', 'activityMiddle',
+                                                                                  'propActivityLeft',
+                                                                                  'propActivityRight',
+                                                                                  'propActivityMiddle', 'timeLeft',
+                                                                                  'timeRight', 'timeMiddle',
+                                                                                  'propTimeLeft', 'propTimeRight',
+                                                                                  'propTimeMiddle', 'survivalMetric'])
+        print masterdataChoice
     if args["mateChoice"]:
         try:
             metadataChoice = pd.read_csv(args["masterData"])
@@ -412,20 +462,3 @@ if __name__ == "__main__":
                                                                                   'propTimeMiddle', 'survivalMetric'])
         print masterdataNumerosity
 
-    #### for scoto
-    if args["scotoData"]:
-        print 'scoto'
-    else:
-        pass
-
-    #### choice
-    if args["mateChoice"]:
-        print 'choice'
-    else:
-        pass
-
-    #### for socio
-    if args["socioData"]:
-        print 'socio'
-    else:
-        pass

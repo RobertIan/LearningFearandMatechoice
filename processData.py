@@ -94,7 +94,7 @@ def fixROIs(datfram):
     datfram['inmid'] = np.where((datfram['midstrt'] < datfram['x']) & (datfram['x'] < datfram['midstp']), 1, None)
     return datfram
 
-
+'''
 def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_day_session
     indnom, day, session, = fishid.split("_")
     masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom, 'session': session, 'day': day,
@@ -117,11 +117,11 @@ def masterdatata(fishid, inddata, masterdata):  ###need to split name a la name_
                                                       'propTimeRight': inddata['inrgt'].sum() / float(len(inddata)),
                                                       'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata))})
     return masterdata
+'''
 
 
 def masterdatato(fishid, inddata, masterdata):
-    pass
-    species, round, SL, sex, indnom, day, session, stimulus, presside = fishid.split("_")
+    species, roundd, SL, sex, indnom, day, session, stimulus, presside = fishid.split("_")
     masterdata.loc[str(len(masterdata))] = pd.Series({'fishName': indnom, 'session': session, 'day': day,
                                                       'timeRight': inddata['inrgt'].sum(),
                                                       'timeLeft': inddata['inlft'].sum(),
@@ -144,7 +144,7 @@ def masterdatato(fishid, inddata, masterdata):
                                                       'propTimeRight': inddata['inrgt'].sum() / float(len(inddata)),
                                                       'propTimeMiddle': inddata['inmid'].sum() / float(len(inddata)),
                                                       'species': species, 'standardLength': SL, 'sex': sex,
-                                                      'ROUND': round,
+                                                      'round': roundd,
                                                       'stimulus': stimulus, 'stimSide': presside,
                                                       'timeStim': inddata['inrgt'].sum() if presside == 'R' else
                                                       inddata['inlft'].sum(),
@@ -159,10 +159,20 @@ def masterdatato(fishid, inddata, masterdata):
     return masterdata
 
 
+def masterdatasocio(fishid1, fishid2, inddata1, inddata2, masterdata):
+    fishidsocio, groupside = fishid.split("_")
+
+    masterdata['sociality'] = np.where(datfram['fishName']==fishidsocio,socioscore,None)
+    return masterdata
+
+
+
+
 if __name__ == "__main__":
     ### setup arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", "--inputVideo", help="path to the video, defaults to numerosity videos")
+    ap.add_argument("-v2", "--inputVideo2", help="path to second video (for mate choice and sociality trials)")
     ap.add_argument("-t", "--trackingData", help="tracking data .csv file, defaults to numerosity data")
     ap.add_argument("-m", "--masterData", help="master data sheet")
     ap.add_argument("-c", "--mateChoice", help="indicates matechoice tracking data", action='store_true')
@@ -175,6 +185,7 @@ if __name__ == "__main__":
     try:
         cap = args["inputVideo"]
         name, ext = args["inputVideo"].split(".")
+        name2, ext = args["inputVideo2"].split(".")
         cv2.namedWindow("tankview", cv2.WINDOW_AUTOSIZE)
         vid = cv2.VideoCapture(cap)
         try:
@@ -192,56 +203,59 @@ if __name__ == "__main__":
     #################### mark ROIS on video
     boxes = []
     rois = []
-    if vid.isOpened():
-        rval, frame = vid.read()
+    if args["socioData"]:
+        pass
     else:
-        rval = False
-    while rval:
-        k = cv2.waitKey(1)
-        cv2.setMouseCallback('tankview', on_mouse, None)
-        flag, frame = vid.read()
-        if flag == 0:
-            break
-        if len(boxes) > 3:
-            lilbx, xs1, xs2, xs3, xs4 = drawbox(boxes)
-            cv2.polylines(frame, np.int32([lilbx]), 1, (0, 0, 255, 0))
-            cv2.setMouseCallback('tankview', on_mouse2, None)
-            if len(rois) > 3:
-                lilbx2, xs12, xs22, xs32, xs42 = drawbox(rois)
-                cv2.polylines(frame, np.int32([lilbx2]), 1, (0, 255, 0, 0))
-                # if k == 115:  # 's' #Mac
-                if k == 1048691:  # 's' #Linux
-                    data.fillna(value=0, inplace=True)
-                    data = data[data['x'] != 0]
-                    if args["scotoData"]:
-                        data = scotoregion(lilbx)
-                    else:
-                        # bs = data.columns.values.tolist()
-                        # print bs
-                        data = getroidata(xs1, xs2, xs3, xs4)
-                        data = getthigmodata(data, lilbx2)
-                        data = activitylevel(data)
-                        # data = distance(data)
-                    cv2.destroyWindow("tankview")
-                    cv2.waitKey(1)
-                    cv2.destroyAllWindows()
-                    cv2.waitKey(1)
-                    vid.release()
-                    rval = False
-                    data.to_csv(name + '_processed.csv')
-                    break
-                # elif k == 99:  # 'c' #Mac
-                elif k == 1048675:  # 'c' #Linux
-                    print 'clear'
-                    del boxes[:]
-                    del rois[:]
-            else:
-                pass
-        cv2.imshow("tankview", frame)
-    cv2.destroyWindow("tankview")
-    cv2.waitKey(1)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
+        if vid.isOpened():
+            rval, frame = vid.read()
+        else:
+            rval = False
+        while rval:
+            k = cv2.waitKey(1)
+            cv2.setMouseCallback('tankview', on_mouse, None)
+            flag, frame = vid.read()
+            if flag == 0:
+                break
+            if len(boxes) > 3:
+                lilbx, xs1, xs2, xs3, xs4 = drawbox(boxes)
+                cv2.polylines(frame, np.int32([lilbx]), 1, (0, 0, 255, 0))
+                cv2.setMouseCallback('tankview', on_mouse2, None)
+                if len(rois) > 3:
+                    lilbx2, xs12, xs22, xs32, xs42 = drawbox(rois)
+                    cv2.polylines(frame, np.int32([lilbx2]), 1, (0, 255, 0, 0))
+                    # if k == 115:  # 's' #Mac
+                    if k == 1048691:  # 's' #Linux
+                        data.fillna(value=0, inplace=True)
+                        data = data[data['x'] != 0]
+                        if args["scotoData"]:
+                            data = scotoregion(lilbx)
+                        else:
+                            # bs = data.columns.values.tolist()
+                            # print bs
+                            data = getroidata(xs1, xs2, xs3, xs4)
+                            data = getthigmodata(data, lilbx2)
+                            data = activitylevel(data)
+                            # data = distance(data)
+                        cv2.destroyWindow("tankview")
+                        cv2.waitKey(1)
+                        cv2.destroyAllWindows()
+                        cv2.waitKey(1)
+                        vid.release()
+                        rval = False
+                        data.to_csv(name + '_processed.csv')
+                        break
+                    # elif k == 99:  # 'c' #Mac
+                    elif k == 1048675:  # 'c' #Linux
+                        print 'clear'
+                        del boxes[:]
+                        del rois[:]
+                else:
+                    pass
+            cv2.imshow("tankview", frame)
+        cv2.destroyWindow("tankview")
+        cv2.waitKey(1)
+        cv2.destroyAllWindows()
+        cv2.waitKey(1)
 
     ### Numerosity Data Sheet creation
     try:
@@ -263,22 +277,35 @@ if __name__ == "__main__":
                                                          'stimulus', 'stimSide',
                                                          'timeStim', 'activityStim', 'propTimeStim',
                                                          'propActivityStim',
-                                                         'activityTotal',
+                                                         'activityTotal', 'sociality', 'choice', 'scoto',
                                                          'activityLeft', 'activityRight', 'activityMiddle',
                                                          'propActivityLeft', 'propActivityRight', 'propActivityMiddle',
                                                          'timeLeft', 'timeRight', 'timeMiddle',
                                                          'propTimeLeft', 'propTimeRight', 'propTimeMiddle',
-                                                         'timeEdge', 'propTimeEdge', })
+                                                         'timeEdge', 'propTimeEdge', 'round', 'ratio'})
         if str(put) == 'n':
             print 'locate master data and place in this directory. use "-m" tag. Then resume.'
             print 'exiting'
             exit()
-    masterdataNumerosity = masterdatato(tdatnom, data, masterdataNumerosity)
+    if args["socioData"]:
+        masterdataNumerosity = masterdatasocio(tdatnom, tdatnom2, data, data2, masterdataNumerosity)
+
+    if args["scotoData"]:
+        print 'scoto'
+        pass
+
+    if args["mateChoice"]:
+        print 'choice'
+        pass
+
+    else:
+        masterdataNumerosity = masterdatato(tdatnom, data, masterdataNumerosity)
+
     masterdataNumerosity.to_csv('masterdataNumerosity.csv', index=False, columns=['species', 'sex', 'round', 'day',
                                                                                   'session',
                                                                                   'standardLength', 'fishID',
                                                                                   'fishName', 'timeEdge',
-                                                                                  'propTimeEdge',
+                                                                                  'propTimeEdge', 'sociality', 'choice', 'scoto',
                                                                                   'propTimeStim', 'propActivityStim',
                                                                                   'stimulus', 'stimSide', 'timeStim',
                                                                                   'activityStim',
@@ -289,18 +316,11 @@ if __name__ == "__main__":
                                                                                   'propActivityMiddle', 'timeLeft',
                                                                                   'timeRight', 'timeMiddle',
                                                                                   'propTimeLeft', 'propTimeRight',
-                                                                                  'propTimeMiddle', 'survivalMetric'])
+                                                                                  'propTimeMiddle', 'survivalMetric', 'ratio'])
+
     print masterdataNumerosity
 
-    #### for scoto
-    if args["scotoData"]:
-        print 'scoto'
-    else:
-        pass
 
-    #### choice
-    if args["mateChoice"]:
-        print 'choice'
     else:
         pass
 

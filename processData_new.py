@@ -314,7 +314,7 @@ if __name__ == "__main__":
     cv2.waitKey(1)
 
     ### Data Sheet creation
- if args["socioData"]:
+    if args["socioData"]:
         try:
             metadataSocio = pd.read_csv(args["masterData"])
         except IOError:
@@ -461,4 +461,3 @@ if __name__ == "__main__":
                                                                                   'propTimeLeft', 'propTimeRight',
                                                                                   'propTimeMiddle', 'survivalMetric'])
         print masterdataNumerosity
-

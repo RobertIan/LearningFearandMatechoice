@@ -30,6 +30,7 @@ csv_writer.writerow(("x", "y", "frame"))
 # converts a frame to HSV, blurs it, masks it to only get the tank by itself
 def convertToHSV(frame):
     blurred = cv2.blur(frame, (2, 2))
+    height, width = blurred.shape[:2]
     print cap.get(6)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
     mask = np.zeros((720, 1280, 3), np.uint8)

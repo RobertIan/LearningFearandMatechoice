@@ -433,10 +433,10 @@ if __name__ == "__main__":
                                                              'timeLeft', 'timeRight', 'timeMiddle',
                                                              'propTimeLeft', 'propTimeRight', 'propTimeMiddle',
                                                              'timeEdge', 'propTimeEdge', })
-        if str(put) == 'n':
-            print 'locate master data and place in this directory. use "-m" tag. Then resume.'
-            print 'exiting'
-            exit()
+            if str(put) == 'n':
+                print 'locate master data and place in this directory. use "-m" tag. Then resume.'
+                print 'exiting'
+                exit()
         masterdataNumerosity = masterdatato(tdatnom, data, masterdataNumerosity)
 
 

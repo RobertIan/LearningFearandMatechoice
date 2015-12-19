@@ -1,4 +1,32 @@
-__author__ = 'ian'
+__author__ = 'RobertIan'
+__version__ = '2.0.2'
+'''
+///////////////////////////////////////////////////////////
+//  Permission is hereby granted, free of charge,
+//  to any person obtaining a copy of
+//  this software and associated documentation files
+//  (the "Software"), to deal in the Software without
+//  restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute,
+//  sublicense, and/or sell copies of the Software, and
+//  to permit persons to whom the Software is furnished
+//  to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice
+//  shall be included in all copies or substantial portions
+//  of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+//  ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+//  TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+//  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+//  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+//  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+//  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+'''
+
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -9,7 +37,7 @@ import plotly.graph_objs as go
 import pylab
 
 #import data
-data = pd.read_csv('data/masterdataNumerosity_sailfins.csv')
+data = pd.read_csv('masterdataROUND3AllCorrectNames_flipped.csv')
 #add high/low condition
 data['condition']=np.where(data['fishName'].str[:1]=='H','High','Low')
 #
@@ -21,6 +49,8 @@ data['condition']=np.where(data['fishName'].str[:1]=='H','High','Low')
 
 #
 ##############################
+
+'''
 # side bias
 tankRight = data.loc[data.tank=='R', ['propTimeRight', 'propTimeLeft']]
 tankLeft = data.loc[data.tank=='L', ['propTimeRight', 'propTimeLeft']]
@@ -44,6 +74,7 @@ print 'sidebiasLeftLeftvLeftRightU', sidebiasLeftLeftvLeftRightU
 print 'sidebiasLeftLeftvLeftRightP', sidebiasLeftLeftvLeftRightP
 ###we see a bias in the left tank towards the right side/away from left side
 ### is this side bias correlated with thigmotaxis (our measure of stress)?
+'''
 ##############################
 #
 #
@@ -58,6 +89,7 @@ print 'sidebiasLeftLeftvLeftRightP', sidebiasLeftLeftvLeftRightP
 #
 ##############################
 #stress levels (thigmotaxis)
+'''
 righttank = data.loc[data.tank=='R',['propTimeEdge']]
 lefttank = data.loc[data.tank=='L',['propTimeEdge']]
 tr = go.Box(y=righttank.propTimeEdge,name='righttankstress')
@@ -82,6 +114,7 @@ print 'stressbytrainerP', stressbytrainerP
 ###stress levels are similar across training groups
 ##############################
 #
+'''
 #
 #
 #
